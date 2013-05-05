@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="PWMAnalyzer" default="all">
+    <path id="libsclasspath">
+        <fileset dir="lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="all" description="Do the entire build" depends="pwmanalyzer"/>
+
+    <target name="make_dirs" description="Make some dirs">
+        <mkdir dir="out/production/PWMAnalyzer"/>
+    </target>
+
+    <target name="compile" description="Compile java sources" depends="make_dirs">
+        <javac destdir="out/production/PWMAnalyzer" includeantruntime="false" debug="true">
+            <classpath refid="libsclasspath"/>
+            <src path="src"/>
+        </javac>
+    </target>
+
+    <target name="pwmanalyzer" description="Link classes and JARs for PWMAnalyzer" depends="compile">
+        <jar id="pwmanalyzer" jarfile="out/production/pwmanalyzer.jar">
+            <manifest>
+                <attribute name="Main-Class" value="me.drton.pwmanalyzer.PWMAnalyzer"/>
+            </manifest>
+            <fileset dir="out/production/PWMAnalyzer">
+                <include name="**/*.class"/>
+            </fileset>
+            <zipgroupfileset dir="lib" includes="*.jar"/>
+        </jar>
+    </target>
+
+    <target name="clean" description="Clean up">
+        <delete dir="out/production"/>
+    </target>
+</project>
