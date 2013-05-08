@@ -25,10 +25,13 @@ public class PWMAnalyzerMain extends JFrame {
     private JLabel statusLabel;
     ChartPanel chartPanel;
     JFreeChart jFreeChart;
+    JCheckBox inputInvert;
+    JRadioButton showPulse;
     JRadioButton showWidth;
     JRadioButton showIntervals;
     PWMAnalyzer analyzer = new PWMAnalyzer();
     XYSeriesCollection dataset = new XYSeriesCollection();
+    String fileName = null;
 
     public PWMAnalyzerMain() throws IOException, UnsupportedAudioFileException {
         super(appName);
@@ -46,6 +49,11 @@ public class PWMAnalyzerMain extends JFrame {
         Container container = getContentPane();
         // Control panel
         Box vBoxLeft = Box.createVerticalBox();
+        // Panel "Input"
+        JPanel panelInput = new JPanel();
+        panelInput.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5),
+                BorderFactory.createTitledBorder("Input")));
+        panelInput.setLayout(new BoxLayout(panelInput, BoxLayout.PAGE_AXIS));
         JButton openButton = new JButton("Open");
         openButton.addActionListener(new ActionListener() {
             @Override
@@ -53,25 +61,40 @@ public class PWMAnalyzerMain extends JFrame {
                 showOpenFileDialog();
             }
         });
-        vBoxLeft.add(openButton);
+        panelInput.add(openButton);
+        inputInvert = new JCheckBox("Invert");
+        ActionListener inputActionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                processFile();
+            }
+        };
+        inputInvert.addActionListener(inputActionListener);
+        panelInput.add(inputInvert);
+        vBoxLeft.add(panelInput);
+        // Panel "Show"
+        JPanel panelShow = new JPanel();
+        panelShow.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5),
+                BorderFactory.createTitledBorder("Show")));
+        panelShow.setLayout(new BoxLayout(panelShow, BoxLayout.PAGE_AXIS));
+        showPulse = new JRadioButton("Pulses");
         showWidth = new JRadioButton("Width");
-        showIntervals = new JRadioButton("Intervals");
-        ActionListener selectPlotActionListener = new ActionListener() {
+        showIntervals = new JRadioButton("Interval");
+        ActionListener showActionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 updateChart();
             }
         };
-        JPanel panelShow = new JPanel();
-        panelShow.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5),
-                BorderFactory.createTitledBorder("Show")));
-        panelShow.setLayout(new BoxLayout(panelShow, BoxLayout.PAGE_AXIS));
-        showWidth.addActionListener(selectPlotActionListener);
-        showIntervals.addActionListener(selectPlotActionListener);
+        showPulse.addActionListener(showActionListener);
+        showWidth.addActionListener(showActionListener);
+        showIntervals.addActionListener(showActionListener);
         showWidth.setSelected(true);
         ButtonGroup group = new ButtonGroup();
+        group.add(showPulse);
         group.add(showWidth);
         group.add(showIntervals);
+        panelShow.add(showPulse);
         panelShow.add(showWidth);
         panelShow.add(showIntervals);
         vBoxLeft.add(panelShow);
@@ -94,15 +117,16 @@ public class PWMAnalyzerMain extends JFrame {
 
     private void updateChart() {
         dataset.removeAllSeries();
-        if (showWidth.isSelected())
+        if (showPulse.isSelected())
+            dataset.addSeries(analyzer.getPulseSeries());
+        else if (showWidth.isSelected())
             dataset.addSeries(analyzer.getPulseWidths());
-        if (showIntervals.isSelected())
+        else if (showIntervals.isSelected())
             dataset.addSeries(analyzer.getPulseIntervals());
         jFreeChart.getXYPlot().getRangeAxis().setAutoRange(true);
     }
 
     public void setStatus(String status) {
-        System.out.printf("Set status: %s\n", status);
         statusLabel.setText(" " + status);
     }
 
@@ -111,21 +135,31 @@ public class PWMAnalyzerMain extends JFrame {
         int returnVal = fc.showDialog(this, "Attach");
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
-            final String fileName = file.getPath();
+            fileName = file.getPath();
+            setTitle(appName + " - " + fileName);
             setStatus("Processing...");
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        analyzer.processFile(fileName);
-                        setStatus("");
-                    } catch (IOException e) {
-                        setStatus("Error: " + e);
-                    } catch (UnsupportedAudioFileException e) {
-                        setStatus("Unsupported audio file");
-                    }
+                    processFile();
                 }
             });
+        }
+    }
+
+    private void processFile() {
+        if (fileName != null) {
+            analyzer.setInputSign(inputInvert.isSelected() ? -1.0 : 1.0);
+            try {
+                analyzer.processFile(fileName);
+                jFreeChart.getXYPlot().getDomainAxis().setAutoRange(true);
+                updateChart();
+                setStatus("");
+            } catch (IOException e) {
+                setStatus("Error: " + e);
+            } catch (UnsupportedAudioFileException e) {
+                setStatus("Unsupported audio file");
+            }
         }
     }
 

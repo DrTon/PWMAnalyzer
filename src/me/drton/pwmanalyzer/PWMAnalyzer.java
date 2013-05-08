@@ -18,8 +18,10 @@ public class PWMAnalyzer {
     private double pulseStart = 0.0;
     private double maxValue = 1.0;
     private double maxValueW = 1.0;
+    private double inputSign = 1.0;
     private XYSeries pulseIntervals = new XYSeries("Interval", false);
     private XYSeries pulseWidths = new XYSeries("Width", false);
+    private XYSeries pulseSeries = new XYSeries("Pulse", false);
 
     private void reset() {
         boolValue = false;
@@ -28,6 +30,7 @@ public class PWMAnalyzer {
         maxValueW = 1.0;
         pulseWidths.clear();
         pulseIntervals.clear();
+        pulseSeries.clear();
     }
 
     public void newValue(double t, double v) {
@@ -40,10 +43,14 @@ public class PWMAnalyzer {
             boolValue = true;
             if (pulseStart != 0)
                 pulseIntervals.add(t, (t - pulseStart) * 1000000);
+            pulseSeries.add(t, 0);
+            pulseSeries.add(t, 1);
             pulseStart = t;
         } else if (v < -threshold && boolValue) {
             boolValue = false;
             pulseWidths.add(t, (t - pulseStart) * 1000000);
+            pulseSeries.add(t, 1);
+            pulseSeries.add(t, 0);
         }
     }
 
@@ -70,7 +77,7 @@ public class PWMAnalyzer {
         while ((numBytesRead = audioInputStream.read(audioBytes)) != -1) {
             numFramesRead = numBytesRead / bytesPerFrame;
             for (int i = 0; i < numFramesRead; i++) {
-                double v = -readInt(audioBytes, i * 2 * channels, bigEndian) / (double) 0x8000;
+                double v = inputSign * readInt(audioBytes, i * 2 * channels, bigEndian) / (double) 0x8000;
                 newValue(t, v);
                 n++;
                 t = n / sampleFreq;
@@ -89,11 +96,19 @@ public class PWMAnalyzer {
         return v;
     }
 
+    public void setInputSign(double inputSign) {
+        this.inputSign = inputSign;
+    }
+
     public XYSeries getPulseIntervals() {
         return pulseIntervals;
     }
 
     public XYSeries getPulseWidths() {
         return pulseWidths;
+    }
+
+    public XYSeries getPulseSeries() {
+        return pulseSeries;
     }
 }
