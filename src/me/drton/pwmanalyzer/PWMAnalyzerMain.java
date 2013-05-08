@@ -23,15 +23,15 @@ import java.io.IOException;
 public class PWMAnalyzerMain extends JFrame {
     public final static String appName = "PWMAnalyzer";
     private JLabel statusLabel;
-    ChartPanel chartPanel;
-    JFreeChart jFreeChart;
-    JCheckBox inputInvert;
-    JRadioButton showPulse;
-    JRadioButton showWidth;
-    JRadioButton showIntervals;
-    PWMAnalyzer analyzer = new PWMAnalyzer();
-    XYSeriesCollection dataset = new XYSeriesCollection();
-    String fileName = null;
+    private ChartPanel chartPanel;
+    private JFreeChart jFreeChart;
+    private JCheckBox inputInvert;
+    private JRadioButton showPulse;
+    private JRadioButton showWidth;
+    private JRadioButton showIntervals;
+    private PWMAnalyzer analyzer = new PWMAnalyzer();
+    private XYSeriesCollection dataset = new XYSeriesCollection();
+    private String fileName = null;
 
     public PWMAnalyzerMain() throws IOException, UnsupportedAudioFileException {
         super(appName);
