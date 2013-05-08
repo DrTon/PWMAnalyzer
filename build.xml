@@ -22,7 +22,7 @@
     <target name="pwmanalyzer" description="Link classes and JARs for PWMAnalyzer" depends="compile">
         <jar id="pwmanalyzer" jarfile="out/production/pwmanalyzer.jar">
             <manifest>
-                <attribute name="Main-Class" value="me.drton.pwmanalyzer.PWMAnalyzer"/>
+                <attribute name="Main-Class" value="me.drton.pwmanalyzer.PWMAnalyzerMain"/>
             </manifest>
             <fileset dir="out/production/PWMAnalyzer">
                 <include name="**/*.class"/>
